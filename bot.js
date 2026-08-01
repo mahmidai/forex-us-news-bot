@@ -1,25 +1,20 @@
 import fetch from "node-fetch";
-import { parseStringPromise } from "xml2js";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
-const RSS_URL = "https://www.forexfactory.com/ffcal_week_this.xml";
+
+const API_URL = "https://cdn-nfs.fxfactory.com/_next/data/ff/en/news.json";
 
 async function fetchNews() {
-  const res = await fetch(RSS_URL);
-  let xml = await res.text();
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  // پاک‌سازی کاراکترهای غیرمجاز XML
-  xml = xml.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, "&amp;");
+  const news = data.pageProps.news;
 
-  const data = await parseStringPromise(xml);
-
-  const items = data.week.event;
-
-  return items.map(item => ({
-    title: item.title[0],
-    country: item.country[0],
-    link: "https://www.forexfactory.com" + item.url[0]
+  return news.map(item => ({
+    title: item.title,
+    country: item.country,
+    link: "https://www.forexfactory.com/news/" + item.id
   }));
 }
 
