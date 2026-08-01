@@ -1,35 +1,27 @@
 import fetch from "node-fetch";
+import { parseStringPromise } from "xml2js";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
-const API_URL = "https://cdn-nfs.fxfactory.com/_next/data/index.json";
+const RSS_URL = "https://www.forexfactory.com/ffcal_week_this.xml";
 
 async function fetchNews() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
+  const res = await fetch(RSS_URL);
+  const xml = await res.text();
 
-  const news = data.pageProps.news;
+  const data = await parseStringPromise(xml);
 
-  return news.map(item => ({
-    title: item.title,
-    link: "https://www.forexfactory.com/news/" + item.id
+  const items = data.week.event;
+
+  return items.map(item => ({
+    title: item.title[0],
+    country: item.country[0],
+    link: "https://www.forexfactory.com" + item.url[0]
   }));
 }
 
-function isUSRelated(title) {
-  const keywords = [
-    "USD", "US ", "U.S.", "America", "American",
-    "CPI", "PPI", "NFP", "GDP", "Inflation", "Jobs", "Unemployment",
-    "Federal Reserve", "Fed", "FOMC",
-    "Jerome Powell", "Powell",
-    "Dow Jones", "DJIA", "S&P", "Nasdaq", "Wall Street",
-    "Stocks", "Equities", "Market Selloff", "Market Rally",
-    "Treasury"
-  ];
-
-  return keywords.some(k =>
-    title.toLowerCase().includes(k.toLowerCase())
-  );
+function isUSRelated(item) {
+  return item.country === "USD" || item.country === "US";
 }
 
 async function sendToTelegram(text) {
@@ -52,8 +44,8 @@ async function runBot() {
   console.log("NEWS COUNT:", news.length);
 
   for (const item of news) {
-    if (isUSRelated(item.title)) {
-      const msg = `🇺🇸 <b>US / USD / Wall Street Related News</b>\n\n📢 <b>${item.title}</b>\n🔗 ${item.link}`;
+    if (isUSRelated(item)) {
+      const msg = `🇺🇸 <b>US / USD Related News</b>\n\n📢 <b>${item.title}</b>\n🔗 ${item.link}`;
       await sendToTelegram(msg);
     }
   }
