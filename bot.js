@@ -2,25 +2,18 @@ import fetch from "node-fetch";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
-const NEWS_URL = "https://www.forexfactory.com/news";
+const API_URL = "https://cdn-nfs.fxfactory.com/_next/data/index.json";
 
 async function fetchNews() {
-  const res = await fetch(NEWS_URL);
-  const html = await res.text();
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  const regex =
-    /<a[^>]+href="(\/news\/[^"]+)"[^>]*>[\s\S]*?<span[^>]*class="title"[^>]*>(.*?)<\/span>/g;
+  const news = data.pageProps.news;
 
-  let match;
-  let news = [];
-
-  while ((match = regex.exec(html)) !== null) {
-    const link = "https://www.forexfactory.com" + match[1];
-    const title = match[2].trim();
-    news.push({ title, link });
-  }
-
-  return news;
+  return news.map(item => ({
+    title: item.title,
+    link: "https://www.forexfactory.com/news/" + item.id
+  }));
 }
 
 function isUSRelated(title) {
