@@ -7,7 +7,10 @@ const RSS_URL = "https://www.forexfactory.com/ffcal_week_this.xml";
 
 async function fetchNews() {
   const res = await fetch(RSS_URL);
-  const xml = await res.text();
+  let xml = await res.text();
+
+  // پاک‌سازی کاراکترهای غیرمجاز XML
+  xml = xml.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, "&amp;");
 
   const data = await parseStringPromise(xml);
 
