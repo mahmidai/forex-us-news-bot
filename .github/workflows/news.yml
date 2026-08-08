@@ -38,7 +38,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          python bot.py
+          python bot_github.py
 
       - name: Save processed news
         run: |
